@@ -6,8 +6,7 @@ rules.push({
 });
 rules.push({
     test: /\.(woff|woff2|eot|ttf|otf)$/i,
-    type: "asset/inline",
-    use: [{ loader: 'file-loader' }]
+    type: 'asset/resource',
 });
 module.exports = {
   // Put your normal webpack config below here

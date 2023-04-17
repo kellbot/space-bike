@@ -1,4 +1,5 @@
 const nodeExternals = require('webpack-node-externals');
+const path = require('path');
 
 module.exports = {
   /**
@@ -8,6 +9,7 @@ module.exports = {
   mode: "development",
   entry: './src/main.js',
   // Put your normal webpack config below here
+
   module: {
     rules: require('./webpack.rules'),
   },

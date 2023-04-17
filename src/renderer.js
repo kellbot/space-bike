@@ -70,13 +70,13 @@ placeholder.innerHTML = batteryHTML;
 const batteryGui = placeholder.firstElementChild;
 
 window.electronAPI.handleElevator((event, elevator) => {
-    voyageStats.innerHTML += `Height: ${Math.round(elevator.height)} m`;
+    voyageStats.innerHTML += `\n<br />Height: ${Math.round(elevator.height)} m`;
     const batteryElem = document.getElementById('batteries');
     if (batteryElem.children.length < 1) {
         for (let i = 0; i < elevator.batteries.length; i++) {
             let battery = elevator.batteries[i];
             batteryElem.appendChild(batteryGui);
-            //ed.innerText += `\nBattery ${i+1}: ${battery.charge / battery.capacity * 100}%`;
+            batteryGui.querySelector('.track').width = battery.charge / battery.capacity * 100 + '%';
         }
     }
 })
