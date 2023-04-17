@@ -29,22 +29,56 @@ import moment from 'moment';
 
 import './index.css';
 
-const cabin = document.getElementById('main-cabin');
-const counter = document.getElementById('counter')
+const riderStats = document.getElementById('rider-stats');
 
-window.electronAPI.handlePlayer((event, value) => {
 
-    cabin.innerText = `Power: ${value.state.power}  Cadence: ${value.state.cadence}`;
+window.electronAPI.handlePlayer((event, player) => {
+
+    riderStats.innerText = `Power: ${player.stream.state.power}  Cadence: ${player.stream.state.cadence}`;
 })
 
-const stats = document.getElementById('stats')
+const voyageStats = document.getElementById('voyage-stats');
 
 window.electronAPI.handleRide((event, value) => {
 
     const et = value.elapsedTime;
     const duration = moment.duration(et);
-    stats.innerText = duration.hours() + ':' + duration.seconds().toString().padStart(2, '0');
-    stats.innerText += `\nEnergy: ${value.kJ} kJ`;
+    voyageStats.innerText = duration.minutes() + ':' + duration.seconds().toString().padStart(2, '0');
+    voyageStats.innerText += `\nEnergy: ${Math.round(value.kJ)} kJ`;
+});
+
+
+const ed = document.getElementById('elevator');
+
+
+const batteryHTML = `<div class="progress">
+<div class="track">
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+<div class="bar"></div>
+</div>
+</div>`;
+const placeholder = document.createElement("div");
+placeholder.innerHTML = batteryHTML;
+const batteryGui = placeholder.firstElementChild;
+
+window.electronAPI.handleElevator((event, elevator) => {
+    voyageStats.innerHTML += `Height: ${Math.round(elevator.height)} m`;
+    const batteryElem = document.getElementById('batteries');
+    if (batteryElem.children.length < 1) {
+        for (let i = 0; i < elevator.batteries.length; i++) {
+            let battery = elevator.batteries[i];
+            batteryElem.appendChild(batteryGui);
+            //ed.innerText += `\nBattery ${i+1}: ${battery.charge / battery.capacity * 100}%`;
+        }
+    }
 })
 
 console.log('👋 This message is being logged by "renderer.js", included via webpack');

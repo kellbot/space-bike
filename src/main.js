@@ -4,12 +4,16 @@ const WebSocket = require('ws');
 
 import Ride from './Ride.js';
 import Player from './Player.js';
+import Elevator from './Elevator.js';
 const Store = require('./Store.js');
 
 
 let mainWindow;
 let activeRide;
 let activePlayer;
+
+let sauceConnected = false;
+
 
 
 
@@ -25,9 +29,12 @@ const store = new Store({
   configName: 'save-data',
   defaults: {
     // Stored as kJ
-    totalEnergy: 666
+    totalEnergy: 0,
+    elevator: {}
   }
 });
+
+let spaceElevator = new Elevator(JSON.parse(store.get('elevator')));
 
 
 const createWindow = () => {
@@ -58,14 +65,16 @@ const createWindow = () => {
           title: 'Confirm',
           message: 'Save progress before quitting?'
       }).then((choice) => {
+        if (choice.response == 2) return;
         if (choice.response == 0) {
           store.set('totalEnergy', activeRide.kJ);
+          store.set('elevator', JSON.stringify(spaceElevator));
           hasConfirmed = true;
-          mainWindow.close();
         } else if (choice.response == 1) {
           hasConfirmed = true;
-          mainWindow.close();
         }
+        if (sauceConnected) socket.close();
+        mainWindow.close();
       });
     }
   });
@@ -100,6 +109,7 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+
 });
 
 
@@ -122,33 +132,37 @@ socket.onmessage = (event) => {
   if (response.success == true && response.type == "event") {
     //stamp when the data came in, it's not in the stream apparently
     response.data.timestamp = Date.now();
-    updateRider(response.data);
+    updateGameData(response.data);
   } else {
     console.log(response);
   }
 };
 socket.onopen = (event) => {
   socket.send(JSON.stringify(subscription));
+  sauceConnected = true;
 };
 
 socket.onclose = (event) => {
-  console.log("Socket closed");
+  sauceConnected = false;
 }
 
-function updateRider(sauceData) {
-  
+function updateGameData(sauceData) {
+
   const currentTime = sauceData.timestamp;
   if (!activeRide) {
     activeRide = new Ride(currentTime);
     activeRide.kJ = store.get('totalEnergy');
+
   } else {  
-    activeRide.updateEnergy(currentTime, sauceData.state.power);
+    let delta = activeRide.updateEnergy(currentTime, sauceData.state.power);
+    spaceElevator.energize(delta);
   }
   if (!activePlayer) activePlayer = new Player();
 
-  activePlayer.updateState(sauceData.state);
+  activePlayer.updateStream(sauceData);
 
 
   mainWindow.webContents.send('update-ride', activeRide);
   mainWindow.webContents.send('update-player', activePlayer);
+  mainWindow.webContents.send('update-elevator', spaceElevator);
 }

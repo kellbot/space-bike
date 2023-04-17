@@ -4,7 +4,11 @@ rules.push({
   test: /\.css$/,
   use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
 });
-
+rules.push({
+    test: /\.(woff|woff2|eot|ttf|otf)$/i,
+    type: "asset/inline",
+    use: [{ loader: 'file-loader' }]
+});
 module.exports = {
   // Put your normal webpack config below here
   module: {

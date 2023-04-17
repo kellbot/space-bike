@@ -4,5 +4,6 @@ const { contextBridge, ipcRenderer  } = require('electron')
 
 contextBridge.exposeInMainWorld('electronAPI', {
 handlePlayer: (callback) => ipcRenderer.on('update-player', callback),
-handleRide: (callback) => ipcRenderer.on('update-ride', callback)
+handleRide: (callback) => ipcRenderer.on('update-ride', callback),
+handleElevator: (callback) => ipcRenderer.on('update-elevator', callback)
 })

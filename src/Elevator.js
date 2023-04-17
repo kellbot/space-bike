@@ -1,12 +1,21 @@
 class Elevator {
-    constructor() {
-        this.phase = 1;
-        this.height = 0;
-        this.batteries = [];
-        this.players = [];
-        this.mass = 100; //kg
+    constructor(saveData = false) {
+        if (!saveData) {
+            this.phase = 1;
+            this.height = 0;
+            this.batteries = [];
+            this.players = [];
+            this.mass = 100; //kg
 
-        this.addBattery('basic');
+
+            this.addBattery('basic');
+        } else {
+            this.phase = saveData.phase;
+            this.height = saveData.height;
+            this.batteries = saveData.batteries;
+            this.players = saveData.players;
+            this.mass = saveData.mass;
+        }
     }
 
     addBattery(type) {
@@ -19,12 +28,11 @@ class Elevator {
 
     // raise the height based on the power provided (kJ)
     ascend(power) {
-        if (power.isNaN()) {
+        if (Number.isNaN(power)) {
             console.log("Error: power is not a number");
             return;
         }
-        const height = (power * 1000) / (this.getTotalMass() * this.calculateGravity());
-
+        this.height += (power * 1000) / (this.getTotalMass() * this.calculateGravity());
     }
 
     // height in meters
@@ -37,6 +45,28 @@ class Elevator {
         const gravity = G * M / Math.pow(R + this.height, 2); 
         return gravity;
     }
+
+    // applies energy to the various systems in the elevator
+    energize(power) {
+        let remainingPower = power;
+        for (let i = 0; i < this.batteries.length; i++) {
+            let battery = this.batteries[i];
+            if (battery.charge < battery.capacity) {
+                // if it's not enough power to fill the battery then use what there is and exit the loop
+                if (remainingPower < battery.capacity - battery.charge) {
+                    battery.charge += remainingPower;
+                    remainingPower = 0;
+                    break;
+                } else {
+                    remainingPower = remainingPower - (battery.capacity - battery.charge);
+                    battery.charge = battery.capacity;
+                }
+            }
+        }
+
+        // use whatever's left to ascend
+        this.ascend(remainingPower)
+    }
     
 }
 
@@ -45,5 +75,9 @@ class Battery {
     constructor(type) {
         this.capacity = 100; // kJ
         this.dischargeRate = 0.5; // per hour 
+        this.charge = 0;
+        this.type = type;
     }
 }
+
+export default Elevator;

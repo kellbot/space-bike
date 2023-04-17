@@ -13,14 +13,16 @@ class Ride {
     }
 
     //duration in milliseconds, power in watts
+    // returns energy delta 
     updateEnergy(timeNow, power) {
         const duration = timeNow - this.lastUpdated;
         //1 joule = 1 watt-second
         const joules = power * (duration/1000);
         this.kJ = this.kJ + joules / 1000;
         this.updateTime(timeNow);
-
+        return joules / 1000;
     }
+
 }
 
 export default  Ride;

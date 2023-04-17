@@ -5,8 +5,8 @@ class Player {
         }
     }
 
-    updateState(data) {
-        this.state = data;
+    updateStream(data) {
+        this.stream = data;
     }
 }
 
