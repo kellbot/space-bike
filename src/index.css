@@ -12,10 +12,15 @@ body {
   color: white;
   background-color: #2e2e2e;
 }
+#spaceView {
+  position: absolute;
+  left: 160px;
+  bottom: 95px;
+}
 #elevator {
   height: 100vh;
   background-position: center;
-  background-image: url('./images/background.jpg');
+  background-image: url('./images/background.png');
   background-size: cover;
   position: relative;
 }
@@ -24,7 +29,11 @@ body {
   position: absolute;
   bottom: 0;
 }
-
+#batteries {
+  top: 50px;
+  left: 150px;
+  position: absolute;
+}
 div.hud {
   width: 215px;
   height: 129px;
@@ -33,8 +42,13 @@ div.hud {
   padding: 20px;
   background-size: cover;
   float: left;
+  margin-left: 20px;
 }
   
+div.hud ul {
+  list-style: none;
+}
+
   div.track, div.bar {
     box-sizing: border-box;
         position: relative;
@@ -75,3 +89,30 @@ div.hud {
         clear: top;
   }
   
+  .charging {
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0% {
+      border-color: #4e4e4e;
+    }
+    50% {
+      border-color: #00C0C0;
+    }
+    100% {
+      border-color: #4e4e4e;
+    }
+  }
+
+  .powered-down {
+    filter: brightness(20%);
+  }
+
+  .rust {
+    background: url('./images/abstract-metallic-surface-with-rust.jpg');
+    background-size: 400%;
+    width: 50px;
+    height: 50px;
+    position: absolute;
+  }

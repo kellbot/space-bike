@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const fs = require('node:fs');
+const { app, BrowserWindow, ipcMain, dialog, screen } = require('electron');
 const path = require('path');
 const WebSocket = require('ws');
 
@@ -6,7 +7,6 @@ import Ride from './Ride.js';
 import Player from './Player.js';
 import Elevator from './Elevator.js';
 const Store = require('./Store.js');
-
 
 let mainWindow;
 let activeRide;
@@ -53,6 +53,7 @@ const createWindow = () => {
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
+  
   let hasConfirmed = false;
   mainWindow.on('close', function(e){
     if (!hasConfirmed) {
@@ -145,6 +146,11 @@ socket.onopen = (event) => {
 socket.onclose = (event) => {
   sauceConnected = false;
 }
+
+socket.onerror = (event) => {
+  console.log(event);
+}
+
 
 function updateGameData(sauceData) {
 

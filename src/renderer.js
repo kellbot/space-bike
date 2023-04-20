@@ -28,8 +28,21 @@
 import moment from 'moment';
 
 import './index.css';
+import updateViewport from './viewport';
+import populateRust from './rust';
+
 
 const riderStats = document.getElementById('rider-stats');
+
+const elemET = document.getElementById('stat-elapsedTime');
+const elemKJ = document.getElementById('stat-energy');
+const elemHeight = document.getElementById('stat-height');
+
+const elemStatus = document.getElementById('stat-status');
+
+const ed = document.getElementById('elevator');
+
+populateRust(300);
 
 
 window.electronAPI.handlePlayer((event, player) => {
@@ -37,22 +50,16 @@ window.electronAPI.handlePlayer((event, player) => {
     riderStats.innerText = `Power: ${player.stream.state.power}  Cadence: ${player.stream.state.cadence}`;
 })
 
-const voyageStats = document.getElementById('voyage-stats');
-
 window.electronAPI.handleRide((event, value) => {
 
     const et = value.elapsedTime;
     const duration = moment.duration(et);
-    voyageStats.innerText = duration.minutes() + ':' + duration.seconds().toString().padStart(2, '0');
-    voyageStats.innerText += `\nEnergy: ${Math.round(value.kJ)} kJ`;
+    elemET.innerText = duration.minutes() + ':' + duration.seconds().toString().padStart(2, '0');
+    elemKJ.innerText = `Energy: ${Math.round(value.kJ)} kJ`;
 });
 
-
-const ed = document.getElementById('elevator');
-
-
-const batteryHTML = `<div class="progress">
-<div class="track">
+const batteryHTML = `<div class="progress charging">
+<div class="track" data-charge="0">
 <div class="bar"></div>
 <div class="bar"></div>
 <div class="bar"></div>
@@ -70,15 +77,49 @@ placeholder.innerHTML = batteryHTML;
 const batteryGui = placeholder.firstElementChild;
 
 window.electronAPI.handleElevator((event, elevator) => {
-    voyageStats.innerHTML += `\n<br />Height: ${Math.round(elevator.height)} m`;
+    elemHeight.innerText = `Height: ${Math.round(elevator.height)} m`;
+    elemStatus.innerHTML = `Status: ${elevator.status}`;
+    if (elevator.status == 'charging') {
+        ed.classList.add('powered-down');
+    } else {
+        ed.classList.remove('powered-down');
+        updateViewport('spaceView', elevator.height);
+    }
+
     const batteryElem = document.getElementById('batteries');
-    if (batteryElem.children.length < 1) {
+    if (batteryElem.children.length < 1 || batteryElem.children.length != elevator.batteries.length) {
+        batteryElem.innerHTML = '';
         for (let i = 0; i < elevator.batteries.length; i++) {
             let battery = elevator.batteries[i];
             batteryElem.appendChild(batteryGui);
-            batteryGui.querySelector('.track').width = battery.charge / battery.capacity * 100 + '%';
+            const chargePCT = battery.charge / battery.capacity * 100;
+            batteryGui.dataset.charge = chargePCT;
+            batteryGui.querySelector('.track').width = chargePCT + '%';
+        }
+    } else {
+        for (let i = 0; i < elevator.batteries.length; i++) {
+            let battery = elevator.batteries[i];
+            let gui = batteryElem.children[i];
+            
+            const chargePCT = battery.charge / battery.capacity * 100;
+
+            if (gui.dataset.charge == chargePCT) { 
+                // Not actively charging
+                gui.classList.remove('charging');
+                continue;
+
+            } else if (gui.dataset.charge > chargePCT) {
+                // discharging
+                gui.classList.remove('charging')
+
+            } else {
+                gui.classList.add('charging');
+            }
+
+            const trackWidth = battery.charge / battery.capacity * 100 + '%';
+            gui.querySelector('.track').style.width = trackWidth;
+            ed.style.filter = `brightness(${chargePCT}%)`;
         }
     }
 })
 
-console.log('👋 This message is being logged by "renderer.js", included via webpack');

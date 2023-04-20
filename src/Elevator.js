@@ -6,7 +6,7 @@ class Elevator {
             this.batteries = [];
             this.players = [];
             this.mass = 100; //kg
-
+            this.status = 'stopped';
 
             this.addBattery('basic');
         } else {
@@ -15,11 +15,20 @@ class Elevator {
             this.batteries = saveData.batteries;
             this.players = saveData.players;
             this.mass = saveData.mass;
+            this.status = 'stopped';
         }
     }
 
     addBattery(type) {
         this.batteries.push(new Battery(type));
+    }
+
+    fullBatteries() {
+        for (let i = 0; i < this.batteries.length; i++) {
+            let battery = this.batteries[i];
+            if (battery.charge < battery.capacity) return false;
+        }
+        return true;
     }
 
     getTotalMass() {
@@ -32,6 +41,7 @@ class Elevator {
             console.log("Error: power is not a number");
             return;
         }
+        this.status = 'climbing';
         this.height += (power * 1000) / (this.getTotalMass() * this.calculateGravity());
     }
 
@@ -52,6 +62,7 @@ class Elevator {
         for (let i = 0; i < this.batteries.length; i++) {
             let battery = this.batteries[i];
             if (battery.charge < battery.capacity) {
+                this.status = 'charging';
                 // if it's not enough power to fill the battery then use what there is and exit the loop
                 if (remainingPower < battery.capacity - battery.charge) {
                     battery.charge += remainingPower;
@@ -65,7 +76,7 @@ class Elevator {
         }
 
         // use whatever's left to ascend
-        this.ascend(remainingPower)
+        if (remainingPower > 0 ) this.ascend(remainingPower);
     }
     
 }
