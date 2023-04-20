@@ -11,6 +11,7 @@ body {
   margin: 0;
   color: white;
   background-color: #2e2e2e;
+  overflow: hidden;
 }
 #spaceView {
   position: absolute;
@@ -34,6 +35,25 @@ body {
   left: 150px;
   position: absolute;
 }
+#dialogs {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events:none;
+}
+div.dialog {
+  background-image: url('./images/dialogbox.png');
+  background-size: 100% 100%;
+  width: 600px;
+  height: 131px;
+  margin:  100px auto;
+  padding: 30px;
+  pointer-events: auto;
+  
+}
+
 div.hud {
   width: 215px;
   height: 129px;

@@ -1,0 +1,10 @@
+{
+    "game-init" : {
+        "text" : "Welcome to your new shiny space elevator! Great things certainly await you, but in order to get moving you'll first need to power up the life support systems. Start pedaling and once the battery is fully charged we can get moving."
+    },
+    "first-launch" : {
+        "text" : "The good news is you're under way, the bad news is your space elevator is in fact neither shiny nor new. It's actually loaded with a bunch of old rusty junk, which adds a considerable amount of weight. You can start ascending, but it will be slow going until you can clear off some of the cruft. Thankfuly you found an electric blowtorch (don't ask how it works) in the rubble, and can start removing the debris.",
+        "notice" : "Blowtorch unlocked",
+        "unlocks" : "blowtorch"
+    }
+}

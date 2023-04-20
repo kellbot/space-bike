@@ -1,4 +1,4 @@
-import { imageContext } from "./images";
+import { imageContext } from "../images";
 
 
 let viewport = {x: 500, y: 200}

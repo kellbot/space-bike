@@ -13,9 +13,15 @@ function populateRust(count) {
         scrap.style.top = randomInteger(0, maxHeight) + 'px';
 
         rustbox.appendChild(scrap);
+        scrap.addEventListener('click', async () => {
+            const result = await window.electronAPI.removeRust();
+            if(result) scrap.remove(); 
+            console.log(result);
+        })
     }
 
 }
+
 
 function randomInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;

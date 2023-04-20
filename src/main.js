@@ -5,7 +5,9 @@ const WebSocket = require('ws');
 
 import Ride from './Ride.js';
 import Player from './Player.js';
-import Elevator from './Elevator.js';
+import { Elevator } from './Elevator.js';
+import story from './story.json'
+
 const Store = require('./Store.js');
 
 let mainWindow;
@@ -30,11 +32,15 @@ const store = new Store({
   defaults: {
     // Stored as kJ
     totalEnergy: 0,
-    elevator: {}
+    elevator: {},
+    elevator: null
   }
 });
 
-let spaceElevator = new Elevator(JSON.parse(store.get('elevator')));
+let saveData;
+if (saveData = store.get('elevator')) saveData = JSON.parse(saveData);
+let spaceElevator = new Elevator(saveData);
+
 
 
 const createWindow = () => {
@@ -54,7 +60,12 @@ const createWindow = () => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   
+
   let hasConfirmed = false;
+  mainWindow.webContents.on('dom-ready', function(){
+    mainWindow.webContents.send('game-init', story['game-init']);
+
+  })
   mainWindow.on('close', function(e){
     if (!hasConfirmed) {
       e.preventDefault();
@@ -82,15 +93,19 @@ const createWindow = () => {
 
 };
 
+function removeRust() {
+  return spaceElevator.removeRust();
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  ipcMain.on('counter-value', (_event, value) => {
-    console.log(value) // will print value to Node console
-  })
-  createWindow();
+  ipcMain.handle('remove-rust', removeRust);
+
  
+  createWindow();
+
 });
 
 
@@ -127,7 +142,6 @@ let subscription = {
       }
   }
 }
-
 socket.onmessage = (event) => {
   const response = JSON.parse(event.data);
   if (response.success == true && response.type == "event") {
@@ -151,6 +165,12 @@ socket.onerror = (event) => {
   console.log(event);
 }
 
+spaceElevator.on('milestone', (args) => {
+  const milestone = story[args.title];
+
+  mainWindow.webContents.send('trigger-milestone', milestone);
+});
+
 
 function updateGameData(sauceData) {
 
@@ -170,5 +190,5 @@ function updateGameData(sauceData) {
 
   mainWindow.webContents.send('update-ride', activeRide);
   mainWindow.webContents.send('update-player', activePlayer);
-  mainWindow.webContents.send('update-elevator', spaceElevator);
+  mainWindow.webContents.send('update-elevator', spaceElevator.data());
 }

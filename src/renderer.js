@@ -28,8 +28,9 @@
 import moment from 'moment';
 
 import './index.css';
-import updateViewport from './viewport';
-import populateRust from './rust';
+import updateViewport from './ui/viewport';
+import populateRust from './ui/rust';
+import showStory from './ui/dialog';
 
 
 const riderStats = document.getElementById('rider-stats');
@@ -42,7 +43,9 @@ const elemStatus = document.getElementById('stat-status');
 
 const ed = document.getElementById('elevator');
 
-populateRust(300);
+window.electronAPI.initializeGame((event, data) => {
+    showStory(data);
+});
 
 
 window.electronAPI.handlePlayer((event, player) => {
@@ -50,31 +53,44 @@ window.electronAPI.handlePlayer((event, player) => {
     riderStats.innerText = `Power: ${player.stream.state.power}  Cadence: ${player.stream.state.cadence}`;
 })
 
+
+window.electronAPI.handleMilestone((event, args)  => {
+    showStory(args);
+});
+
 window.electronAPI.handleRide((event, value) => {
 
     const et = value.elapsedTime;
     const duration = moment.duration(et);
     elemET.innerText = duration.minutes() + ':' + duration.seconds().toString().padStart(2, '0');
-    elemKJ.innerText = `Energy: ${Math.round(value.kJ)} kJ`;
+    elemKJ.innerText = `Energy: ${value.kJ.toFixed(2)} kJ`;
 });
 
-const batteryHTML = `<div class="progress charging">
-<div class="track" data-charge="0">
-<div class="bar"></div>
-<div class="bar"></div>
-<div class="bar"></div>
-<div class="bar"></div>
-<div class="bar"></div>
-<div class="bar"></div>
-<div class="bar"></div>
-<div class="bar"></div>
-<div class="bar"></div>
-<div class="bar"></div>
-</div>
-</div>`;
-const placeholder = document.createElement("div");
-placeholder.innerHTML = batteryHTML;
-const batteryGui = placeholder.firstElementChild;
+function createBattery(label, name, charge) {
+    const batteryHTML = `
+    <div class="label">${label}</div>
+    <div class="progress charging">
+    <div class="track" data-charge="${charge}">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    </div>
+    </div>`;
+    const placeholder = document.createElement("div");
+    placeholder.id = name;
+    placeholder.innerHTML = batteryHTML;
+
+    return placeholder;
+
+}
+
 
 window.electronAPI.handleElevator((event, elevator) => {
     elemHeight.innerText = `Height: ${Math.round(elevator.height)} m`;
@@ -86,40 +102,43 @@ window.electronAPI.handleElevator((event, elevator) => {
         updateViewport('spaceView', elevator.height);
     }
 
-    const batteryElem = document.getElementById('batteries');
-    if (batteryElem.children.length < 1 || batteryElem.children.length != elevator.batteries.length) {
-        batteryElem.innerHTML = '';
-        for (let i = 0; i < elevator.batteries.length; i++) {
-            let battery = elevator.batteries[i];
-            batteryElem.appendChild(batteryGui);
-            const chargePCT = battery.charge / battery.capacity * 100;
-            batteryGui.dataset.charge = chargePCT;
-            batteryGui.querySelector('.track').width = chargePCT + '%';
+    const rustbox = document.getElementById('rustbox');
+    if (rustbox.children.length < elevator.rust) {
+        populateRust(elevator.rust - rustbox.children.length);
+    }
+
+    const batteryBox = document.getElementById('batteries');
+    // look for existing system gauges
+    for (let i = 0; i < elevator.systems.length; i++) {
+        let system = elevator.systems[i];
+        let gauge = batteryBox.querySelector('#' + system.id);
+        const chargePCT = system.power.charge / system.power.capacity * 100;
+
+        // check if it already exists
+        if (!gauge) {
+            gauge = createBattery(system.label, system.id, chargePCT);
+            batteryBox.appendChild(gauge)
         }
-    } else {
-        for (let i = 0; i < elevator.batteries.length; i++) {
-            let battery = elevator.batteries[i];
-            let gui = batteryElem.children[i];
-            
-            const chargePCT = battery.charge / battery.capacity * 100;
 
-            if (gui.dataset.charge == chargePCT) { 
-                // Not actively charging
-                gui.classList.remove('charging');
-                continue;
+        gauge.querySelector('.track').width = chargePCT + '%';
 
-            } else if (gui.dataset.charge > chargePCT) {
-                // discharging
-                gui.classList.remove('charging')
+        if (gauge.dataset.charge == chargePCT) { 
+            // Not actively charging
+            gauge.classList.remove('charging');
+            continue;
 
-            } else {
-                gui.classList.add('charging');
-            }
+        } else if (gauge.dataset.charge > chargePCT) {
+            // discharging
+            gauge.classList.remove('charging')
 
-            const trackWidth = battery.charge / battery.capacity * 100 + '%';
-            gui.querySelector('.track').style.width = trackWidth;
-            ed.style.filter = `brightness(${chargePCT}%)`;
+        } else {
+            gauge.classList.add('charging');
+            const trackWidth = chargePCT+ '%';
+            gauge.querySelector('.track').style.width = trackWidth;
+            // this really belongs elsewhere
+            if (system.id == 'life-support') ed.style.filter = `brightness(${chargePCT}%)`;
         }
     }
+
 })
 
