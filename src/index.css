@@ -29,12 +29,9 @@ body {
 #hudrow {
   position: absolute;
   bottom: 0;
+  width: 100%;
 }
-#batteries {
-  top: 50px;
-  left: 150px;
-  position: absolute;
-}
+
 #dialogs {
   width: 100vw;
   height: 100vh;
@@ -55,7 +52,7 @@ div.dialog {
 }
 
 div.hud {
-  width: 215px;
+  width: 210px;
   height: 129px;
   background-image: url('./images/hudbox.png');
   font-family: 'Oxanium', cursive;
@@ -82,9 +79,7 @@ div.hud ul {
         border-radius: 5px;
         border: solid 3px #4e4e4e;
         background-color: #1e1e1e;
-        position: absolute;
-        top: calc(50% - 13px);
-        left: calc(50% - 53px);
+
   }
   
   div.track {

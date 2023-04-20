@@ -74,7 +74,7 @@ function drawHorizon(canvasId, height) {
 function createLandmarks() {
     let landmarks = [];
     let buildings = [
-        {name: 'Independance Hall', height: 51, width: 32, distance: randomInteger(20,70), x: randomInteger(0,viewport.x - 32), id: 1  },
+        {name: 'Independance Hall', height: 51, width: 32, distance: 20, x: viewport.x/2 - 32, id: 1  },
         {name: 'Art Museum', height: 60, width: 160, distance: randomInteger(70,200), x:  randomInteger(0,viewport.x - 160), id: 2},
         {name: 'City Hall', height: 157, width: 128, distance: randomInteger(200,300), x: randomInteger(0,viewport.x - 128), id: 3},
         {name: 'Liberty 1', height: 288, width: 117, distance: randomInteger(300,400),x:  randomInteger(0,viewport.x - 11), id: 6},
