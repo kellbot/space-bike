@@ -33,7 +33,7 @@ window.electronAPI.handleRide((event, value) => {
 
     const et = value.elapsedTime;
     const duration = new Timer(et);
-    elemET.innerText = `${duration.hours().toString().padStart(2, 0)}:${duration.minutes()}:${duration.seconds()}`;
+    elemET.innerText = `${duration.hours().toString().padStart(2, 0)}:${duration.minutes().toString().padStart(2, 0)}:${duration.seconds().toString().padStart(2, 0)}`;
     elemKJ.innerText = `Energy: ${value.kJ.toFixed(2)} kJ`;
 });
 

@@ -16,18 +16,12 @@ class Elevator extends EventEmitter {
             this.systems = [
                 {id: 'life-support', label: 'Life Support', power: new Battery('basic'), required: true}
             ];
-           // this.addBattery('basic');
             
         } else {
-            this.phase = saveData.phase;
-            this.height = saveData.height;
-            this.batteries = saveData.batteries;
-            this.systems = saveData.systems;
-            this.players = saveData.players;
-            this.mass = saveData.mass;
-            this.status = 'stopped';
-            this.rust = saveData.rust;
-            this.tools = saveData.tools;
+            Object.assign(this, saveData);
+            this.systems.forEach(element => {
+                element.power = Object.assign(new Battery('basic'), element.power);
+            });
         }
     }
 
@@ -150,9 +144,9 @@ class Battery {
             this.charge = 0.5;
             this.dischargeRate = 0;
         } else { //basic
-            this.capacity = 100; // kJ
+            this.capacity = 50; // kJ
             this.dischargeRate = 0.25; // per hour 
-            this.charge = 90;
+            this.charge = 0;
         }
     }
     // Takes available power and returns leftover power (if any)

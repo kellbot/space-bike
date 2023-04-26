@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const WebSocket = require('ws');
 
@@ -23,11 +23,13 @@ const store = new Store({
 });
 
 let saveData;
-if (saveData = store.get('elevator')) saveData = JSON.parse(saveData);
+if (saveData = store.get('elevator')) saveData = saveData;
+console.log(saveData);
 let spaceElevator = new Elevator(saveData);
-let activeRide;
+let activeRide = new Ride();
 let activePlayer;
 let mainWindow;
+let sauceSocket;
 
 const createWindow = () => {
    mainWindow = new BrowserWindow({
@@ -42,6 +44,33 @@ const createWindow = () => {
   mainWindow.webContents.on('dom-ready', function(){
     mainWindow.webContents.send('update-elevator', spaceElevator.data());
   });
+  let hasConfirmed = false;
+  mainWindow.on('close', function(e){
+    if (!hasConfirmed) {
+      e.preventDefault();
+
+      dialog.showMessageBox(this,
+        {
+          type: 'question',
+          buttons: ['Yes', 'No', 'Cancel'],
+          title: 'Confirm',
+          message: 'Save progress before quitting?'
+      }).then((choice) => {
+        if (choice.response == 2) return;
+        if (choice.response == 0) {
+          store.set('totalEnergy', activeRide.kJ);
+          store.set('elevator', spaceElevator);
+          activeRide.save();
+          hasConfirmed = true;
+        } else if (choice.response == 1) {
+          hasConfirmed = true;
+        }
+        if (sauceSocket.readyState !== WebSocket.CLOSED) sauceSocket.close();
+        mainWindow.close();
+      });
+    }
+  });
+
 
   mainWindow.loadFile('src/ui/index.html')
 }
@@ -62,23 +91,25 @@ app.whenReady().then(() => {
   })
 })
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
+
+
 
 function updateGameData(sauceData) {
+  if(!activeRide.started) {
+    activeRide.start();
+    activeRide.sauceTime = sauceData.state.worldTime;
+  } else {
+    const duration = sauceData.state.worldTime - activeRide.sauceTime;
+    if (duration > 500) { // limit updates to twice per second
+      activeRide.sauceTime = sauceData.state.worldTime;
 
-  const currentTime = sauceData.timestamp;
-  if (!activeRide) {
-    activeRide = new Ride(currentTime);
-    activeRide.kJ = store.get('totalEnergy');
-
-  } else {  
-    let delta = activeRide.updateEnergy(currentTime, sauceData.state.power);
-    spaceElevator.energize(delta);
+      let delta = activeRide.updateEnergy(duration, sauceData.state.power);
+      spaceElevator.energize(delta);
+    }
   }
+
+
+  
   if (!activePlayer) activePlayer = new Player();
 
   activePlayer.updateStream(sauceData);
@@ -90,39 +121,41 @@ function updateGameData(sauceData) {
 }
 
 /* Interface with Sauce */
+let reconnectInterval = 1000 * 30;
+var sauce = function(){
+  sauceSocket = new WebSocket('ws://192.168.11.124:1080/api/ws/events');
 
-let socket = new WebSocket('ws://192.168.11.124:1080/api/ws/events');
+  let subscription = {
+    type: "request",
+    uid: "random-request-id-5134",
+    data: {
+        method: "subscribe",
+        arg: {
+            event: "athlete/watching",
+            subId: 'random-sub-id-53611'
+        }
+    }
+  }
+  sauceSocket.onmessage = (event) => {
+    const response = JSON.parse(event.data);
+    if (response.success == true && response.type == "event") {
+      //stamp when the data came in, it's not in the stream apparently
+      response.data.timestamp = Date.now();
+      updateGameData(response.data);
+    } else {
+      console.log(response);
+    }
+  };
+  sauceSocket.onopen = (event) => {
+    sauceSocket.send(JSON.stringify(subscription));
+  };
 
-let subscription = {
-  type: "request",
-  uid: "random-request-id-5134",
-  data: {
-      method: "subscribe",
-      arg: {
-          event: "athlete/watching",
-          subId: 'random-sub-id-53611'
-      }
+  sauceSocket.onclose = (event) => {
+  }
+
+  sauceSocket.onerror = (event) => {
+    console.log(event.error);
+    setTimeout(sauce, reconnectInterval);
   }
 }
-socket.onmessage = (event) => {
-  const response = JSON.parse(event.data);
-  if (response.success == true && response.type == "event") {
-    //stamp when the data came in, it's not in the stream apparently
-    response.data.timestamp = Date.now();
-    updateGameData(response.data);
-  } else {
-    console.log(response);
-  }
-};
-socket.onopen = (event) => {
-  socket.send(JSON.stringify(subscription));
-  sauceConnected = true;
-};
-
-socket.onclose = (event) => {
-  sauceConnected = false;
-}
-
-socket.onerror = (event) => {
-  console.log(event);
-}
+sauce();

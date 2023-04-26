@@ -34,11 +34,12 @@ body {
 
 #dialogs {
   width: 100vw;
-  height: 100vh;
+  height: 200px;
   position: absolute;
   top: 0;
   left: 0;
-  pointer-events:none;
+  background-color: black;
+  color: chartreuse;
 }
 div.dialog {
   background-image: url('./images/dialogbox.png');
