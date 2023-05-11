@@ -119,6 +119,7 @@ class Elevator extends EventEmitter {
     removeRust() {
         if (this.rust < 1) return false;
         this.rust = this.rust - 1;
+        console.log(this.rust);
         return true;
     }
     

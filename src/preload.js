@@ -8,5 +8,5 @@ handleRide: (callback) => ipcRenderer.on('update-ride', callback),
 handleElevator: (callback) => ipcRenderer.on('update-elevator', callback),
 initializeGame: (callback) => ipcRenderer.on('game-init', callback),
 handleMilestone: (callback) => ipcRenderer.on('trigger-milestone', callback),
-removeRust: () => ipcRenderer.invoke('remove-rust'),
+removeRust: (callback) => ipcRenderer.invoke('remove-rust', callback),
 })

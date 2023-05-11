@@ -76,7 +76,7 @@ const createWindow = () => {
 }
 
 function removeRust() {
-  spaceElevator.removeRust();
+  return spaceElevator.removeRust();
 }
 
 
@@ -123,7 +123,7 @@ function updateGameData(sauceData) {
 /* Interface with Sauce */
 let reconnectInterval = 1000 * 30;
 var sauce = function(){
-  sauceSocket = new WebSocket('ws://192.168.11.124:1080/api/ws/events');
+  sauceSocket = new WebSocket('ws://192.168.11.226:1080/api/ws/events');
 
   let subscription = {
     type: "request",
